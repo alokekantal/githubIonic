@@ -1,0 +1,9 @@
+{
+  "name": "githubIonic",
+  "app_id": "",
+  "v2": true,
+  "typescript": true,
+  "serve" :  {
+       "defaultBrowser" :  "chrome"
+   }
+}

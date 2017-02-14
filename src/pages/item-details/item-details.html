@@ -1,0 +1,27 @@
+<ion-header>
+  <ion-navbar>
+    <button menuToggle *ngIf="!selectedItem">
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>{{selectedItem.CategoryName}}</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+  <ion-item>
+    <ion-label>Year Month</ion-label>
+    <ion-datetime displayFormat="MMMM-YYYY" pickerFormat="MMMM YYYY" [(ngModel)]="date" (ngModelChange)="getItemDetail()"></ion-datetime>
+  </ion-item>
+  <ion-grid>
+    <ion-row class="headerBackgroundColor">
+      <ion-col width-30>Date</ion-col>
+      <ion-col width-50>Description</ion-col>
+      <ion-col width-20>Price</ion-col>
+    </ion-row>
+    <ion-row *ngFor="let item of detail; let i = index" [ngClass]="{'backgroundColor': (i+1)%2==0}">
+      <ion-col width-33>{{item.Date | amDateFormat: 'DD-MM-YYYY'}}</ion-col>
+      <ion-col width-50>{{item.Description}}</ion-col>
+      <ion-col width-10><ion-badge item-right>{{item.Price}}</ion-badge></ion-col>
+    </ion-row>
+  </ion-grid> 
+</ion-content>

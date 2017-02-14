@@ -1,0 +1,165 @@
+
+<ion-header>
+  <ion-navbar no-border-bottom style="min-height: 45px;">
+    <button ion-button icon-only menuToggle>
+      <ion-icon name="menu"></ion-icon> 
+    </button>
+    <ion-title>
+      Entry
+    </ion-title>
+  </ion-navbar>
+
+  <ion-toolbar style="padding: 0px; min-height: 40px;">
+    <ion-segment [(ngModel)]="subMenu" (ngModelChange)="changeSegment()">
+      <ion-segment-button value="meal">
+        Meal
+      </ion-segment-button>
+      <ion-segment-button value="expense">
+        Expense
+      </ion-segment-button>
+      <ion-segment-button value="deposit">
+        Deposit
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div [ngSwitch]="subMenu">
+    <div *ngSwitchCase="'meal'">
+        <ion-searchbar (input)="search($event)"></ion-searchbar>
+        <ion-list style="margin:0px !important">
+            <ion-item>
+              <ion-label>Date</ion-label>
+              <ion-datetime displayFormat="DD-MM-YYYY" pickerFormat="DD-MM-YYYY" [(ngModel)]="toDayDate" (ngModelChange)="getMealDetail()"></ion-datetime>
+            </ion-item>
+        </ion-list>
+        <ion-card *ngFor="let d of allMemberMealDetail">
+          <ion-card-header style="background-color: lightblue" (click)="toggleDetails(d)">
+            <ion-icon color="primary" [name]="d.icon" style="float: right"></ion-icon>
+            {{d.Name}}
+          </ion-card-header>
+            <ion-grid *ngIf="d.showDetails">
+              <ion-row>
+                <ion-col width-25>Day</ion-col>
+                <ion-col width-25><ion-checkbox color="dark" [(ngModel)]="d.Day"></ion-checkbox></ion-col>
+                <ion-col width-25>Night</ion-col>
+                <ion-col width-25><ion-checkbox color="dark" checked="false"[(ngModel)]="d.Night"></ion-checkbox></ion-col>
+              </ion-row>
+              <ion-row>Guest</ion-row>
+              <ion-row>
+                <ion-col width-20>Day</ion-col>
+                <ion-col width-10><ion-checkbox color="dark" [(ngModel)]="d.GuestDay" (ngModelChange)="d.NoOfGuestDay = null"></ion-checkbox></ion-col>
+                <ion-col width-20><input type="number" [disabled]="!d.GuestDay" [(ngModel)]="d.NoOfGuestDay" class="meal-text-box" /></ion-col>
+                <ion-col width-20>Night</ion-col>
+                <ion-col width-10><ion-checkbox color="dark" [(ngModel)]="d.GuestNight" (ngModelChange)="d.NoOfGuestNight = null"></ion-checkbox></ion-col>
+                <ion-col width-20><input type="number" [disabled]="!d.GuestNight" [(ngModel)]="d.NoOfGuestNight" class="meal-text-box" /></ion-col>
+              </ion-row>
+              <ion-row>
+                  <button ion-button icon-right small style="float:right" (click)="saveMealDetail(d)">Save
+                      <ion-icon ios="ios-thumbs-up" md="md-thumbs-up"></ion-icon>
+                  </button>
+              </ion-row>
+            </ion-grid>
+        </ion-card>
+    </div>
+
+    <ion-list *ngSwitchCase="'expense'">    
+      <ion-item>
+        <ion-label>Date</ion-label>
+        <ion-datetime displayFormat="DD-MMMM-YYYY" [(ngModel)]="expDetail.Date" (ngModelChange)="getExpenseDetailByDateCat()"></ion-datetime>
+      </ion-item>
+      <ion-item>
+      <ion-label>Category</ion-label>
+      <ion-select [(ngModel)]="expDetail.CategoryId" (ngModelChange)="getExpenseDetailByDateCat()">
+          <ion-option *ngFor="let key of category" value="{{key.CategoryId}}">{{key.CategoryName}}</ion-option>        
+        </ion-select>
+      </ion-item>
+      <ion-item *ngIf="showCount">
+        <ion-label>Count</ion-label>
+        <ion-input type="number" [(ngModel)]="expDetail.Count" (ngModelChange)="expDetail.Price = package*expDetail.Count; makeDirty()"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label>Cost</ion-label>
+        <ion-input type="number" [(ngModel)]="expDetail.Price" (ngModelChange)="makeDirty()"></ion-input>
+      </ion-item>
+      <ion-item>      
+        <ion-textarea rows="3" placeholder="Description" [(ngModel)]="expDetail.Description" (ngModelChange)="makeDirty()"></ion-textarea>
+      </ion-item>
+      <ion-item *ngIf="!expDetail.RecordId">         
+        <ion-label>Consignee</ion-label>
+        <ion-select [(ngModel)]="depositDetail.MemberId" placeholder="select">
+          <ion-option *ngFor="let member of members" value="{{member.MemberId}}">{{member.Name}}</ion-option>        
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-label>Paid To Same</ion-label>
+        <ion-checkbox checked="false" [(ngModel)]="depositDetail.IsPaidTo"></ion-checkbox>
+      </ion-item>
+      <ion-item *ngIf="!expDetail.RecordId">
+        <ion-label>Same Amount</ion-label>
+        <ion-checkbox checked="false" [(ngModel)]="depositDetail.IsSameAmount" (ngModelChange)="setDepositAmount()"></ion-checkbox>      
+      </ion-item>
+      <ion-item *ngIf="!expDetail.RecordId">
+        <ion-label>Deposit amount</ion-label>
+        <ion-input type="number" [(ngModel)]="depositDetail.Amount"></ion-input>
+      </ion-item>
+      <ion-item style="border-bottom: none">
+        <button ion-button large full [disabled]="!isDirty" (click)="saveExpense()">Save</button>
+      </ion-item>
+
+      <ion-card  *ngIf="expensesDetails?.length > 0">
+          <ion-card-header style="background-color: lightblue">
+            Expense Summary
+          </ion-card-header>
+          <ion-grid>
+            <!--<ion-row class="headerBackgroundColor">
+              <ion-col width-25 *ngFor="let key of detail[0] | keys">{{key.key}}</ion-col>
+            </ion-row>-->
+            <ion-row *ngFor="let row of expensesDetails; let i = index" [ngClass]="{'backgroundColor': (i+1)%2==0}">
+              <ion-col width-33>{{row.Name}}</ion-col>
+              <ion-col width-50>{{row.Description}}</ion-col>
+              <ion-col width-10><ion-badge item-right>{{row.Price}}</ion-badge></ion-col>
+            </ion-row>
+          </ion-grid>
+      </ion-card>
+  </ion-list>
+
+    <div *ngSwitchCase="'deposit'">
+      <ion-list>
+        <ion-item>
+          <ion-label>Date</ion-label>
+          <ion-datetime displayFormat="DD-MMMM-YYYY" [(ngModel)]="depositDetail.Date" (ngModelChange)="getDepositDetail()"></ion-datetime>
+        </ion-item>      
+        <ion-item>
+          <ion-label>Deposit to</ion-label>
+          <ion-select [(ngModel)]="depositDetail.MemberId" placeholder="select" (ngModelChange)="getDepositDetail()">
+            <ion-option *ngFor="let member of members" value="{{member.MemberId}}">{{member.Name}}</ion-option>        
+          </ion-select>
+        </ion-item>      
+        <ion-item>
+          <ion-label>Deposit amount</ion-label>
+          <ion-input type="number" [(ngModel)]="depositDetail.Amount" (ngModelChange)="makeDirty()"></ion-input>
+        </ion-item>
+        <ion-item style="border-bottom: none">
+          <button ion-button large full  [disabled]="!isDirty" (click)="saveDeposit(depositDetail)">Save</button>
+        </ion-item>
+      </ion-list>
+      <ion-card  *ngIf="memberDepositDetail?.length > 0">
+        <ion-card-header style="background-color: lightblue">
+          Deposit Summary
+        </ion-card-header>
+        <ion-grid>
+            <!--<ion-row class="headerBackgroundColor">
+              <ion-col width-25 *ngFor="let key of detail[0] | keys">{{key.key}}</ion-col>
+            </ion-row>-->
+            <ion-row *ngFor="let row of memberDepositDetail; let i = index" [ngClass]="{'backgroundColor': (i+1)%2==0}">
+              <ion-col width-33>{{row.Date | amDateFormat: 'DD-MM-YYYY'}}</ion-col>
+              <ion-col width-50>{{row.CategoryName}}</ion-col>
+              <ion-col width-10><ion-badge item-right>{{row.Amount}}</ion-badge></ion-col>
+            </ion-row>
+          </ion-grid>
+      </ion-card>
+    </div>
+  </div>
+</ion-content>

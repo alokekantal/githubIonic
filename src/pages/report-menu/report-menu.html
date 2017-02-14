@@ -1,0 +1,18 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button icon-only menuToggle>
+      <ion-icon name="menu"></ion-icon> 
+    </button>
+    <ion-title>Report</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>    
+    <a ion-item *ngFor="let item of category" (click)="goToDetail(item)">
+      {{item.CategoryName}}
+      <ion-badge item-right *ngIf="!item.Price">0</ion-badge>
+      <ion-badge item-right *ngIf="item.Price">{{item.Price}}</ion-badge>
+    </a>    
+  </ion-list>
+</ion-content>
